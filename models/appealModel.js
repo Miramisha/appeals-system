@@ -15,17 +15,21 @@ const updateStatus = (id, status, textField, text) => {
   );
 };
 
-const getAppeals = (startDate, endDate) => {
+// Обновленная функция getAppeals с пагинацией и сортировкой
+const getAppeals = (startDate, endDate, limit = 50, offset = 0) => {
   let query = 'SELECT * FROM appeals';
   let params = [];
 
   if (startDate && endDate) {
-    query += ' WHERE DATE(created_at) BETWEEN ? AND ?';
+    query += ' WHERE created_at BETWEEN ? AND ?';
     params = [startDate, endDate];
   } else if (startDate) {
     query += ' WHERE DATE(created_at) = ?';
     params = [startDate];
   }
+
+  query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
 
   return db.execute(query, params);
 };
@@ -42,3 +46,4 @@ module.exports = {
   getAppeals,
   cancelAllInWork
 };
+
