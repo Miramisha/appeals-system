@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/appealsController');
+const validate = require('../middlewares/validate');
+const validator = require('../validators/appealsValidator');
 
 router.post('/appeals', controller.createAppeal);
 router.post('/appeals/:id/take', controller.takeAppeal);
