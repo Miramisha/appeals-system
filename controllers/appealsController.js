@@ -4,6 +4,7 @@ const model = require('../models/appealModel');
 exports.createAppeal = async (req, res) => {
   const { topic, message } = req.body;
   if (!topic || !message) return res.status(400).send('Missing topic or message');
+
   try {
     const [result] = await model.createAppeal(topic, message);
     res.status(201).json({ id: result.insertId });
@@ -12,9 +13,21 @@ exports.createAppeal = async (req, res) => {
   }
 };
 
+const checkAppealExists = async (id, res) => {
+  const [rows] = await model.findById(id);
+  if (rows.length === 0) {
+    res.status(404).send('Обращение не найдено');
+    return false;
+  }
+  return true;
+};
+
 exports.takeAppeal = async (req, res) => {
+  const { id } = req.params;
+  if (!(await checkAppealExists(id, res))) return;
+
   try {
-    await model.updateStatus(req.params.id, 'В работе', 'resolution', null);
+    await model.updateStatus(id, 'В работе');
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,10 +35,13 @@ exports.takeAppeal = async (req, res) => {
 };
 
 exports.completeAppeal = async (req, res) => {
+  const { id } = req.params;
   const { resolution } = req.body;
   if (!resolution) return res.status(400).send('Missing resolution text');
+  if (!(await checkAppealExists(id, res))) return;
+
   try {
-    await model.updateStatus(req.params.id, 'Завершено', 'resolution', resolution);
+    await model.updateStatus(id, 'Завершено', 'resolution', resolution);
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -33,10 +49,13 @@ exports.completeAppeal = async (req, res) => {
 };
 
 exports.cancelAppeal = async (req, res) => {
+  const { id } = req.params;
   const { reason } = req.body;
   if (!reason) return res.status(400).send('Missing cancellation reason');
+  if (!(await checkAppealExists(id, res))) return;
+
   try {
-    await model.updateStatus(req.params.id, 'Отменено', 'cancellation_reason', reason);
+    await model.updateStatus(id, 'Отменено', 'cancellation_reason', reason);
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -44,12 +63,9 @@ exports.cancelAppeal = async (req, res) => {
 };
 
 exports.getAppeals = async (req, res) => {
-  const { date, start, end, page = 1, limit = 50 } = req.query;
-  const safeLimit = Math.min(parseInt(limit), 100); // максимум 100 записей
-
+  const { date, start, end } = req.query;
   try {
-    const offset = (page - 1) * safeLimit;
-    const [rows] = await model.getAppeals(date || start, date ? date : end, safeLimit, offset);
+    const [rows] = await model.getAppeals(date || start, date ? date : end);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,3 +80,4 @@ exports.cancelAllInWork = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
