@@ -1,27 +1,33 @@
-const { body } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
-exports.createAppealValidation = [
+exports.validateCreateAppeal = [
   body('topic')
-    .trim()
-    .notEmpty().withMessage('Тема обязательна')
-    .isLength({ max: 255 }).withMessage('Тема не должна превышать 255 символов'),
-
+    .notEmpty().withMessage('Поле "topic" обязательно')
+    .isLength({ max: 255 }).withMessage('Максимальная длина "topic" — 255 символов'),
   body('message')
-    .trim()
-    .notEmpty().withMessage('Сообщение обязательно')
-    .isLength({ max: 1000 }).withMessage('Сообщение не должно превышать 1000 символов'),
+    .notEmpty().withMessage('Поле "message" обязательно'),
 ];
 
-exports.completeAppealValidation = [
+exports.validateCompleteAppeal = [
   body('resolution')
-    .trim()
-    .notEmpty().withMessage('Решение обязательно')
-    .isLength({ max: 1000 }).withMessage('Решение не должно превышать 1000 символов'),
+    .notEmpty().withMessage('Поле "resolution" обязательно'),
 ];
 
-exports.cancelAppealValidation = [
+exports.validateCancelAppeal = [
   body('reason')
-    .trim()
-    .notEmpty().withMessage('Причина обязательна')
-    .isLength({ max: 1000 }).withMessage('Причина не должна превышать 1000 символов'),
+    .notEmpty().withMessage('Поле "reason" обязательно'),
+];
+
+exports.validateAppealIdParam = [
+  param('id')
+    .isInt({ min: 1 }).withMessage('ID обращения должен быть положительным числом'),
+];
+
+exports.validateDateFilters = [
+  query('date')
+    .optional().isISO8601().withMessage('Дата должна быть в формате YYYY-MM-DD'),
+  query('start')
+    .optional().isISO8601().withMessage('Дата "start" должна быть в формате YYYY-MM-DD'),
+  query('end')
+    .optional().isISO8601().withMessage('Дата "end" должна быть в формате YYYY-MM-DD'),
 ];
